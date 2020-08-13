@@ -393,11 +393,15 @@ module Rodauth
     def password_match?(password)
       if hash = get_password_hash
         if account_password_hash_column || !use_database_authentication_functions?
-          BCrypt::Password.new(hash) == password
+          password_hash_match?(hash, password)
         else
           db.get(Sequel.function(function_name(:rodauth_valid_password_hash), account_id, BCrypt::Engine.hash_secret(password, hash)))
         end 
       end
+    end
+
+    def password_hash_match?(hash, password)
+      BCrypt::Password.new(hash) == password
     end
 
     def update_session

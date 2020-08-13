@@ -55,7 +55,9 @@ module Rodauth
         end
       else
         # :nocov:
-        previous_password_ds.select_map(previous_password_hash_column).any?{|hash| BCrypt::Password.new(hash) == password}
+        previous_password_ds.select_map(previous_password_hash_column).any? do |hash|
+          password_hash_match?(hash, password)
+        end
         # :nocov:
       end
 
