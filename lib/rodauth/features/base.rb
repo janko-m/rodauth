@@ -1,5 +1,8 @@
 # frozen-string-literal: true
 
+require 'securerandom'
+require 'openssl'
+
 module Rodauth
   Feature.define(:base, :Base) do
     after 'login'

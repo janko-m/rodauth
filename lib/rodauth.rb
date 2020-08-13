@@ -1,7 +1,5 @@
 # frozen-string-literal: true
 
-require 'securerandom'
-
 module Rodauth
   def self.load_dependencies(app, opts={})
     json_opt = opts.fetch(:json, app.opts[:rodauth_json])
