@@ -38,14 +38,7 @@ module Rodauth
             throw_error_reason(:invalid_password, invalid_password_error_status, password_param, invalid_password_message)
           end
 
-          transaction do
-            before_close_account
-            close_account
-            after_close_account
-            if delete_account_on_close?
-              delete_account
-            end
-          end
+          perform_account_close
           clear_session
 
           set_notice_flash close_account_notice_flash
@@ -54,6 +47,17 @@ module Rodauth
 
         set_error_flash close_account_error_flash
         close_account_view
+      end
+    end
+
+    def perform_account_close
+      transaction do
+        before_close_account
+        close_account
+        after_close_account
+        if delete_account_on_close?
+          delete_account
+        end
       end
     end
 

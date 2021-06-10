@@ -79,16 +79,11 @@ module Rodauth
           redirect verify_login_change_redirect
         end
 
-        transaction do
-          before_verify_login_change
-          unless verify_login_change
-            set_redirect_error_status(invalid_key_error_status)
-            set_error_reason :already_an_account_with_this_login
-            set_redirect_error_flash verify_login_change_duplicate_account_error_flash
-            redirect verify_login_change_duplicate_account_redirect
-          end
-          remove_verify_login_change_key
-          after_verify_login_change
+        unless complete_login_change
+          set_redirect_error_status(invalid_key_error_status)
+          set_error_reason :already_an_account_with_this_login
+          set_redirect_error_flash verify_login_change_duplicate_account_error_flash
+          redirect verify_login_change_duplicate_account_redirect
         end
 
         if verify_login_change_autologin?
@@ -98,6 +93,15 @@ module Rodauth
         remove_session_value(verify_login_change_session_key)
         set_notice_flash verify_login_change_notice_flash
         redirect verify_login_change_redirect
+      end
+    end
+
+    def complete_login_change
+      transaction do
+        before_verify_login_change
+        verify_login_change or return
+        remove_verify_login_change_key
+        after_verify_login_change
       end
     end
 

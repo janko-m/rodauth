@@ -58,32 +58,38 @@ module Rodauth
             unless password_meets_requirements?(password)
               throw_error_reason(:password_does_not_meet_requirements, invalid_field_error_status, password_param, password_does_not_meet_requirements_message)
             end
-
-            if account_password_hash_column
-              set_new_account_password(password)
-            end
           end
 
-          transaction do
-            before_create_account
-            unless save_account
-              throw_error_status(invalid_field_error_status, login_param, login_does_not_meet_requirements_message)
-            end
-
-            if create_account_set_password? && !account_password_hash_column
-              set_password(password)
-            end
-            after_create_account
-            if create_account_autologin?
-              autologin_session('create_account')
-            end
-            set_notice_flash create_account_notice_flash
-            redirect create_account_redirect
+          unless create_account(login, password)
+            throw_error_status(invalid_field_error_status, login_param, login_does_not_meet_requirements_message)
           end
+
+          if create_account_autologin?
+            autologin_session('create_account')
+          end
+          set_notice_flash create_account_notice_flash
+          redirect create_account_redirect
         end
 
         set_error_flash create_account_error_flash
         create_account_view
+      end
+    end
+
+    def create_account(login, password = nil)
+      new_account(login) unless account
+
+      if password && account_password_hash_column
+        set_new_account_password(password)
+      end
+
+      transaction do
+        before_create_account
+        save_account or return
+        if password && !account_password_hash_column
+          set_password(password)
+        end
+        after_create_account
       end
     end
 

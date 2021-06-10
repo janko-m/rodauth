@@ -73,13 +73,7 @@ module Rodauth
             redirect unlock_account_email_recently_sent_redirect
           end
 
-          @unlock_account_key_value = get_unlock_account_key
-          transaction do
-            before_unlock_account_request
-            set_unlock_account_email_last_sent
-            send_unlock_account_email
-            after_unlock_account_request
-          end
+          request_account_unlock
 
           set_notice_flash unlock_account_request_notice_flash
         else
@@ -123,13 +117,10 @@ module Rodauth
         end
 
         if !unlock_account_requires_password? || password_match?(param(password_param))
-          transaction do
-            before_unlock_account
-            unlock_account
-            after_unlock_account
-            if unlock_account_autologin?
-              autologin_session('unlock_account')
-            end
+          perform_account_unlock
+
+          if unlock_account_autologin?
+            autologin_session('unlock_account')
           end
 
           remove_session_value(unlock_account_session_key)
@@ -154,6 +145,24 @@ module Rodauth
         end
       else
         false
+      end
+    end
+
+    def request_account_unlock
+      @unlock_account_key_value = get_unlock_account_key
+      transaction do
+        before_unlock_account_request
+        set_unlock_account_email_last_sent
+        send_unlock_account_email
+        after_unlock_account_request
+      end
+    end
+
+    def perform_account_unlock
+      transaction do
+        before_unlock_account
+        unlock_account
+        after_unlock_account
       end
     end
 

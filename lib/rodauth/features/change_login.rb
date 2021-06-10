@@ -42,16 +42,12 @@ module Rodauth
             throw_error_reason(:logins_do_not_match, unmatched_field_error_status, login_param, logins_do_not_match_message)
           end
 
-          transaction do
-            before_change_login
-            unless change_login(login)
-              throw_error_status(invalid_field_error_status, login_param, login_does_not_meet_requirements_message)
-            end
-
-            after_change_login
-            set_notice_flash change_login_notice_flash
-            redirect change_login_redirect
+          unless perform_login_change(login)
+            throw_error_status(invalid_field_error_status, login_param, login_does_not_meet_requirements_message)
           end
+
+          set_notice_flash change_login_notice_flash
+          redirect change_login_redirect
         end
 
         set_error_flash change_login_error_flash
@@ -61,6 +57,14 @@ module Rodauth
 
     def change_login_requires_password?
       modifications_require_password?
+    end
+
+    def perform_login_change(login)
+      transaction do
+        before_change_login
+        change_login(login) or return
+        after_change_login
+      end
     end
 
     def change_login(login)

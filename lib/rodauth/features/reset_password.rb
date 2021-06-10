@@ -80,13 +80,7 @@ module Rodauth
             redirect reset_password_email_recently_sent_redirect
           end
 
-          generate_reset_password_key_value
-          transaction do
-            before_reset_password_request
-            create_reset_password_key
-            send_reset_password_email
-            after_reset_password_request
-          end
+          request_password_reset
 
           set_notice_flash reset_password_email_sent_notice_flash
           redirect reset_password_email_sent_redirect
@@ -142,12 +136,7 @@ module Rodauth
             throw_error_status(invalid_field_error_status, password_param, password_does_not_meet_requirements_message)
           end
 
-          transaction do
-            before_reset_password
-            set_password(password)
-            remove_reset_password_key
-            after_reset_password
-          end
+          reset_password(password)
 
           if reset_password_autologin?
             autologin_session('reset_password')
@@ -160,6 +149,25 @@ module Rodauth
 
         set_error_flash reset_password_error_flash
         reset_password_view
+      end
+    end
+
+    def request_password_reset
+      generate_reset_password_key_value
+      transaction do
+        before_reset_password_request
+        create_reset_password_key
+        send_reset_password_email
+        after_reset_password_request
+      end
+    end
+
+    def reset_password(password)
+      transaction do
+        before_reset_password
+        set_password(password)
+        remove_reset_password_key
+        after_reset_password
       end
     end
 

@@ -99,11 +99,7 @@ module Rodauth
         if two_factor_password_match?(param(password_param))
           if can_add_recovery_codes?
             if param_or_nil(add_recovery_codes_param)
-              transaction do
-                before_add_recovery_codes
-                add_recovery_codes(recovery_codes_limit - recovery_codes.length)
-                after_add_recovery_codes
-              end
+              fill_recovery_codes
               set_notice_now_flash recovery_codes_added_notice_flash
             end
 
@@ -167,6 +163,14 @@ module Rodauth
 
     def can_add_recovery_codes?
       recovery_codes.length < recovery_codes_limit
+    end
+
+    def fill_recovery_codes
+      transaction do
+        before_add_recovery_codes
+        add_recovery_codes(recovery_codes_limit - recovery_codes.length)
+        after_add_recovery_codes
+      end
     end
 
     def add_recovery_codes(number)

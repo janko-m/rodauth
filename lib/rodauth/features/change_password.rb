@@ -49,17 +49,22 @@ module Rodauth
             throw_error_status(invalid_field_error_status, new_password_param, password_does_not_meet_requirements_message)
           end
 
-          transaction do
-            before_change_password
-            set_password(password)
-            after_change_password
-          end
+          perform_password_change(password)
+
           set_notice_flash change_password_notice_flash
           redirect change_password_redirect
         end
 
         set_error_flash change_password_error_flash
         change_password_view
+      end
+    end
+
+    def perform_password_change(password)
+      transaction do
+        before_change_password
+        set_password(password)
+        after_change_password
       end
     end
 

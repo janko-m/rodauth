@@ -100,6 +100,16 @@ module Rodauth
       end
     end
 
+    def request_email_auth
+      generate_email_auth_key_value
+      transaction do
+        before_email_auth_request
+        create_email_auth_key
+        send_email_auth_email
+        after_email_auth_request
+      end
+    end
+
     def create_email_auth_key
       transaction do
         if email_auth_key_value = get_email_auth_key(account_id)
@@ -191,13 +201,7 @@ module Rodauth
         redirect email_auth_email_recently_sent_redirect
       end
 
-      generate_email_auth_key_value
-      transaction do
-        before_email_auth_request
-        create_email_auth_key
-        send_email_auth_email
-        after_email_auth_request
-      end
+      request_email_auth
 
       set_notice_flash email_auth_email_sent_notice_flash
     end
